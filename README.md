@@ -12,6 +12,7 @@ login to firebase
 >	firebase login
 
 >	firebase init
+
 Do not overwrite package.json
 
 Deploy your Cloud Function for Firebase with
