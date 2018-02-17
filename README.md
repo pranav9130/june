@@ -20,6 +20,7 @@ Deploy your Cloud Function for Firebase with
 
 Source:
 https://firebase.google.com/docs/cli/#setup
+
 https://dialogflow.com/docs/how-tos/getting-started-fulfillment#moving_fulfillment_outside_of_the_editor
 
 Database used: cloud firestore		https://firebase.google.com/docs/firestore
