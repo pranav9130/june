@@ -2,6 +2,7 @@
 
 const admin = require('firebase-admin'); //required for cloud firestore
 const functions = require('firebase-functions'); // Cloud Functions for Firebase library
+const personDetails = require('./intents/personDetails');
 
 admin.initializeApp(functions.config().firebase);			//initialize cloud firestore
 var db = admin.firestore();									// db reference
@@ -9,8 +10,8 @@ var db = admin.firestore();									// db reference
 
 const DialogflowApp = require('actions-on-google').DialogflowApp; // Google Assistant helper library
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, response) => {
-  console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
-  console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
+  //console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
+  //console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   if (request.body.result) {
     processV1Request(request, response);
   } else {
@@ -35,7 +36,9 @@ function processV1Request (request, response) {
     },
     //Person details intent
     'getPersonDetails': () => {
-    	personDetailsProcess(parameters);
+    	personDetails.personDetailsProcess(db, parameters, function(res){
+    		sendResponse(res);
+    	});
     },
     // The default fallback intent has been matched, try to recover (https://dialogflow.com/docs/intents#fallback_intents)
     'input.unknown': () => {
@@ -60,55 +63,34 @@ function processV1Request (request, response) {
   // Run the proper handler function to handle the request from Dialogflow
   actionHandlers[action]();
 
-  function personDetailsProcess(parameters) {
-  	let personName = parameters.personName;
-  	let personDetails = parameters.personDetails;
-
-  	if(personName.length == 1) {
-  		let name = personName[0];
-  		//let peopleRef = db.collection('people');
-
-
-  		db.collection("people")
-		    .get()
-		    .then(function(querySnapshot) {
-		        querySnapshot.forEach(function(doc) {
-		            // doc.data() is never undefined for query doc snapshots
-		            let record = doc.data();
-		            if(record.name.first == name) {
-		            	sendResponse(name + "'s mobile number is " + record.mobile);
-		            }
-		        });
-		    })
-		    .catch(function(error) {
-		        console.log("Error getting documents: ", error);
-		    });
-  	}
-  	else {
-
-  	}
-  }
-    
-  // Function to send correctly formatted responses to Dialogflow which are then sent to the user
-  function sendResponse (responseToUser) {
-    // if the response is a string send it as a response to the user
-    if (typeof responseToUser === 'string') {
-      let responseJson = {};
-      responseJson.speech = responseToUser; // spoken response
-      responseJson.displayText = responseToUser; // displayed response
-      response.json(responseJson); // Send response to Dialogflow
-    } else {
-      // If the response to the user includes rich responses or contexts send them to Dialogflow
-      let responseJson = {};
-      // If speech or displayText is defined, use it to respond (if one isn't defined use the other's value)
-      responseJson.speech = responseToUser.speech || responseToUser.displayText;
-      responseJson.displayText = responseToUser.displayText || responseToUser.speech;
-      // Optional: add rich messages for integrations (https://dialogflow.com/docs/rich-messages)
-      responseJson.data = responseToUser.data;
-      // Optional: add contexts (https://dialogflow.com/docs/contexts)
-      responseJson.contextOut = responseToUser.outputContexts;
-      console.log('Response to Dialogflow: ' + JSON.stringify(responseJson));
-      response.json(responseJson); // Send response to Dialogflow
-    }
-  }
+  // function personDetailsProcess(db, parameters) {
+  	
+  // }
+  function sendResponse(responseToUser) {
+	    // if the response is a string send it as a response to the user
+	    if (typeof responseToUser === 'string') {
+	      let responseJson = {};
+	      responseJson.speech = responseToUser; // spoken response
+	      responseJson.displayText = responseToUser; // displayed response
+	      response.json(responseJson); // Send response to Dialogflow
+	    } else {
+	      // If the response to the user includes rich responses or contexts send them to Dialogflow
+	      let responseJson = {};
+	      // If speech or displayText is defined, use it to respond (if one isn't defined use the other's value)
+	      responseJson.speech = responseToUser.speech || responseToUser.displayText;
+	      responseJson.displayText = responseToUser.displayText || responseToUser.speech;
+	      // Optional: add rich messages for integrations (https://dialogflow.com/docs/rich-messages)
+	      responseJson.data = responseToUser.data;
+	      // Optional: add contexts (https://dialogflow.com/docs/contexts)
+	      responseJson.contextOut = responseToUser.outputContexts;
+	      console.log('Response to Dialogflow: ' + JSON.stringify(responseJson));
+	      response.json(responseJson); // Send response to Dialogflow
+	    }
+	  }
 }
+
+  // Function to send correctly formatted responses to Dialogflow which are then sent to the user
+
+ 
+
+//module.exports = {sendResponse};
